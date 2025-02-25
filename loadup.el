@@ -68,13 +68,4 @@
 
 ;; Define
 
-(defalias 'defun
-  (cons 'macro #'(lambda (name args &rest body))))
-
-(get-buffer-create "example")
-(set-window-buffer (selected-window) "*Messages*")
-;; (set-buffer "example")
-(setq mode-line-format '("%b"))
-(insert (format "%S" mode-line-format))
-
 (provide 'loadup)
