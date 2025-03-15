@@ -33,6 +33,26 @@
 (internal-set-lisp-face-attribute 'default :background "white" t)
 (internal-set-lisp-face-attribute 'default :foreground "black" t)
 
+;; Virtual cursors
+(defvar cursors '())
+(make-variable-buffer-local 'cursors)
+(set-default 'cursor-type nil)
+
+(internal-make-lisp-face 'visual-cursor)
+(defalias 'set-visual-cursor-attributes
+  #'(lambda ()
+      (internal-set-lisp-face-attribute 'visual-cursor :background "black" 0)
+      (internal-set-lisp-face-attribute 'visual-cursor :foreground "white" 0))
+  "Temporary. Faces have to be set for every frame otherwise it's an invalid face reference")
+(set-visual-cursor-attributes)
+
+(defalias 'new-cursor
+  #'(lambda (start &optional end mark)
+      (let* ((overlay (make-overlay start (or end (+ start 1)) (current-buffer) t))
+             (cursor (cons overlay mark)))
+        (overlay-put overlay 'face '(visual-cursor))
+        (setq cursors (cons cursor cursors))
+        cursor)))
 (put 'keyboard-translate-table 'char-table-extra-slots 0)
 (setq x-resource-name "emacs")
 
@@ -46,6 +66,7 @@
 
 (delete-frame terminal-frame)
 (setq terminal-frame nil)
+(set-visual-cursor-attributes)
 
 ;; Stupidly basic keybindings
 
