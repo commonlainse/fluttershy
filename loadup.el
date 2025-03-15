@@ -63,6 +63,21 @@
         (overlay-put overlay 'face '(visual-cursor))
         (setq cursors (cons cursor cursors))
         cursor)))
+
+(defalias 'cursor-start
+  #'(lambda (cursor)
+      (overlay-start (car cursor))))
+
+(defalias 'cursor-end
+  #'(lambda (cursor)
+      (overlay-end (car cursor))))
+
+(defalias 'cursor-activated-p
+  #'(lambda (cursor)
+      (cdr cursor)))
+
+;; Make window
+
 (put 'keyboard-translate-table 'char-table-extra-slots 0)
 (setq x-resource-name "emacs")
 
@@ -87,14 +102,44 @@
             (define-key keymap (string init) def)
             (define-key-range keymap (+ init 1) end def)))))
 
+(defalias 'visual-self-insert
+  #'(lambda ()
+      (interactive)
+      (save-excursion
+        (let ((iter cursors))
+          (while iter
+            (goto-char (cursor-start (car iter)))
+            (insert last-command-event)
+            (setq iter (cdr iter)))))))
+
+(defalias 'visual-backward-char
+  #'(lambda ()
+      (interactive)
+      (for-each (cursor cursors)
+                (move-overlay (car cursor) (1- (cursor-start cursor)) (1- (cursor-end cursor))))))
+
+(defalias 'visual-forward-char
+  #'(lambda ()
+      (interactive)
+      (for-each (cursor cursors)
+                (move-overlay (car cursor) (1+ (cursor-start cursor)) (1+ (cursor-end cursor))))))
+
+(defalias 'visual-delete-char
+  #'(lambda ()
+      (interactive)
+      (for-each (cursor cursors)
+                (save-excursion
+                  (goto-char (cursor-start cursor))
+                  (delete-char -1)))))
+
 (let ((map (make-keymap)))
-  (define-key-range map ?0 ?9 #'self-insert-command)
-  (define-key-range map ?A ?Z #'self-insert-command)
-  (define-key-range map ?a ?z #'self-insert-command)
-  (define-key map " " #'self-insert-command)
-  (define-key map [left] #'backward-char)
-  (define-key map [right] #'forward-char)
-  (define-key map [backspace] #'delete-char)
+  (define-key-range map ?0 ?9 #'visual-self-insert)
+  (define-key-range map ?A ?Z #'visual-self-insert)
+  (define-key-range map ?a ?z #'visual-self-insert)
+  (define-key map " " #'visual-self-insert)
+  (define-key map [left] #'visual-backward-char)
+  (define-key map [right] #'visual-forward-char)
+  (define-key map [backspace] #'visual-delete-char)
   (use-global-map map))
 
 ;; Define
