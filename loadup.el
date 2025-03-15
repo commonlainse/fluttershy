@@ -33,6 +33,16 @@
 (internal-set-lisp-face-attribute 'default :background "white" t)
 (internal-set-lisp-face-attribute 'default :foreground "black" t)
 
+(defalias 'for-each
+  (cons 'macro
+        #'(lambda (spec &rest body)
+            (let ((i (make-symbol "iter")))
+              (list 'let (list (list i (car (cdr spec))))
+                    (list 'while i
+                          (append (list 'let (list (list (car spec) (list 'car i)))) body)
+                          (list 'setq i (list 'cdr i)))))))
+  "Temporary alternative to Emacs Lisp's `dolist'")
+
 ;; Virtual cursors
 (defvar cursors '())
 (make-variable-buffer-local 'cursors)
