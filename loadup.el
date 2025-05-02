@@ -143,5 +143,7 @@
   (use-global-map map))
 
 ;; Define
+(load "repl.el")
+(repl-start)
 
 (provide 'loadup)

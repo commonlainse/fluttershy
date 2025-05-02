@@ -67,6 +67,10 @@
   #'(lambda (window))
   "Called by 'set-window-buffer' and 'set-window-configuration' in window.c")
 
+(defalias 'kill-buffer--possibly-save
+  #'(lambda (buffer) t)
+  "Called by 'kill-buffer' in buffer.c")
+
 ;;; Functions that handle events
 
 (defalias 'handle-move-frame
@@ -91,6 +95,9 @@
           (kill-emacs 0)
         (delete-frame (car (nth 1 event)) t)))
   "Defined to be called in 'keys_of_keyboard' from C file keyboard.c")
+
+(defalias 'run-hook-query-error-with-timeout #'run-hooks
+  "Called by `kill-emacs' in 'emacs.c' when called interactively")
 
 ;;; Needed to create frames
 (defalias 'vendor-specific-keysyms #'(lambda (vendor) nil))
@@ -241,3 +248,5 @@
   nil ; eol-type
   nil ; bom
   )
+
+(provide 'emacs)
