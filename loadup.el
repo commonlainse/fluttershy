@@ -25,6 +25,7 @@
 
 ;; Obligatory functions which the C code depends on
 
+(require 'lang)
 (load "emacs.el")
 
 (set-buffer "*scratch*")
