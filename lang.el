@@ -41,7 +41,10 @@
                     ;; v  No need to process lists in the form (,@ ...)
                     ;; v  As they're handled above by this same `cond'
                     (null (and (consp (car value))
-                               (eq (car (car value)) '\,@))))
+                               (eq (car (car value)) '\,@)))
+                    ;; v  To properly handle `(a . ,b)
+                    ;; v  Which Elisp transforms to '(a \, b)
+                    (null (eq (car value) '\,)))
           (setcar tail (list 'cons (backquote (car value)) nil))
           (setq tail (cdr (cdr (car tail))))
           (setq value (cdr value)))
