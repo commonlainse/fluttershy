@@ -87,5 +87,17 @@
        #'(lambda ,arglist ,@body)
        ,docstring)))
 
+(defmacro -> (init &rest body)
+  "Move every statement to be the first argument of the next statement
+
+(-> a 1+) => (-> (1+ a))
+(-> a (+ b)) => (-> (+ a b))"
+  (while body
+    (let ((el (car body)))
+      (when (symbolp el)
+        (setq el (list el)))
+      (setq init `(,(car el) ,init . ,(cdr el))))
+    (setq body (cdr body)))
+  init)
 (provide 'lang)
 ;;; lang.el ends here
