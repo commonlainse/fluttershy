@@ -59,13 +59,19 @@
 `(a b ,@c) -> '(a b ...c...)
 `(a b ,@'(c d e)) -> (a b c d e)")
 
+(defalias 'when
+  (cons 'macro
+        (lambda (cond &rest body)
+          `(if ,cond (progn ,@body))))
+  "Evaluates BODY if COND isn't nil")
+
 (defalias 'defmacro
   (cons 'macro
         (lambda (name arglist &rest body)
           (let (docstring)
-            (if (and (cdr body) (stringp (car body)))
-                (progn (setq docstring (car body))
-                       (setq body (cdr body))))
+            (when (and (cdr body) (stringp (car body)))
+              (setq docstring (car body))
+              (setq body (cdr body)))
             `(defalias ',name
                (cons 'macro #'(lambda ,arglist ,@body))
                ,docstring))))
@@ -74,9 +80,9 @@
 (defmacro defun (name arglist &rest body)
   "Define a function called NAME"
   (let (docstring)
-    (if (and (cdr body) (stringp (car body)))
-        (progn (setq docstring (car body))
-               (setq body (cdr body))))
+    (when (and (cdr body) (stringp (car body)))
+      (setq docstring (car body))
+      (setq body (cdr body)))
     `(defalias ',name
        #'(lambda ,arglist ,@body)
        ,docstring)))
