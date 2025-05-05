@@ -99,5 +99,89 @@
       (setq init `(,(car el) ,init . ,(cdr el))))
     (setq body (cdr body)))
   init)
+
+;; TODO: document `with' more and add more constructs
+(defmacro with (&rest body)
+  "Swiss army knife macro to avoid excessive nesting
+
+`buffer'
+`temp-buffer'
+`alist'
+`if'
+`when'
+`unless'
+`defer'
+`capture'
+`catch'
+`times'
+`accumulate'
+`seq'
+`defun'
+`output-to-string'
+`name'"
+  (let ((res (list 'progn))
+        tail)
+    (setq tail res)
+    (while body
+      (let ((el (car body))
+            with-form)
+        (if (and (consp el)
+                 (symbolp (car el))
+                 (setq with-form (get (car el) 'with-form))
+                 (setq with-form (apply with-form (cdr el))))
+            (progn (setcdr tail (cons (car with-form) (cdr tail)))
+                   (setq tail (cdr with-form)))
+          (setcdr tail (cons el (cdr tail)))
+          (setq tail (cdr tail))))
+      (setq body (cdr body)))
+    res))
+
+(defmacro do (forms &rest body)
+  `(with ,@forms (progn ,@body)))
+
+(defmacro defwith (sym arglist &rest body)
+  "Defines a form to be used in `with' or `do'
+
+Any symbol with 'with-form is a form to be used in `with'.
+It must be a lambda that takes the rest of the form, and returns
+a cons where the CAR is the output and CDR a cons where the subsequent
+values will be inserted
+
+e.g:
+(defwith log (start end)
+  (let ((res `(progn (message ,start) (message ,end))))
+    (cons res (cdr res))))
+
+(with (log \"Hello\" \"Bye\")
+      (insert \"wow\"))
+=>
+(message \"Hello\")
+(insert \"wow\")
+(message \"Bye\")"
+  `(progn
+     (put ',sym 'with-form #'(lambda ,arglist ,@body))
+     (defmacro ,(intern (format "with-%S" sym)) (form &rest body)
+       (append '(with) (list (cons ',sym form)) body))))
+
+(defwith let (var &rest body)
+  (let ((ret `(let ((,var (progn ,@body))))))
+    (cons ret (cdr ret))))
+
+(defwith deferr (&rest body)
+  (let ((ret `(progn ,@body)))
+    (cons ret ret)))
+
+(defwith when (&rest cond)
+  (let ((ret `(when (progn ,@cond))))
+    (cons ret (cdr ret))))
+
+(defwith while (&rest cond)
+  (let ((ret `(while (progn ,@cond))))
+    (cons ret (cdr ret))))
+
+(defwith if (cond &rest body)
+  (let ((ret `(if ,cond (progn ,@body))))
+    (cons ret (cdr (cdr ret)))))
+
 (provide 'lang)
 ;;; lang.el ends here
